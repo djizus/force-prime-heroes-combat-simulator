@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Force Prime Heroes Combat Simulator
-// @version      1.5
+// @version      1.6
 // @description  Fight projections for Force Prime Heroes
 // @license      MIT
 // @namespace    https://github.com/djizus
 // @author       djizus
 // @icon         https://forceprime.io/favicon.ico
-// @match        https://forceprime.io/play?*
+// @match        https://forceprime.io/*
 // @grant        none
 // ==/UserScript==
 
@@ -51,6 +51,11 @@
         {"Unit": "Bone Dragon", "Type": "Melee", "Atk": 250, "HP": 1000, "Power": 500}
     ];
 
+    // Function to check if the current URL matches the target
+    function isPlayPage() {
+        return window.location.href.startsWith("https://forceprime.io/play");
+    }
+	
     // Function to parse URL parameters
     function parseUrlParams(url) {
         let params = {};
@@ -238,6 +243,7 @@
 
     // Create UI container
 	const container = document.createElement('div');
+	container.id = "forceprimehelper";
 	container.style.padding = '1%';
 	container.style.backgroundColor = 'black';
 	container.style.border = '1px solid white';
@@ -248,6 +254,7 @@
 	container.style.height = '75%';
 	container.style.overflowY = 'auto';
 	container.style.zIndex = '1000';
+	container.style.visibility = 'hidden';
 
     // Create hero data div
 	const refreshDataText = document.createElement('div');
@@ -402,5 +409,14 @@
 	// Add display to the page
 	document.body.appendChild(container);
 
+    // Periodically check if we are on the play page
+    const checkInterval = setInterval(function() {
+        if (isPlayPage()) {
+            container.style.visibility = 'visible'; // Show the container
+        } else {
+			container.style.visibility = 'hidden'; // Hide the container
+		}
+    }, 1000); // Check every 1 second
+	
 
 })();
