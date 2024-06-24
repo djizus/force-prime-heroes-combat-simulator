@@ -17,4 +17,4 @@ Make sure you have user scripts enabled in your browser (these instructions refe
 * UC Browser - install [Tampermonkey](https://tampermonkey.net/?ext=dhdg&browser=ucweb).
 
 ### Install scripts
-Install the scripts via [OpenUserJS][install-script](https://openuserjs.org/scripts/djizus/Force_Prime_Heroes_Combat_Simulator). Or find the latest version and release notes at the [releases page](https://github.com/djizus/force-prime-heroes-combat-simulator/releases).
+Install the scripts via [OpenUserJS](https://openuserjs.org/scripts/djizus/Force_Prime_Heroes_Combat_Simulator). Or find the latest version and release notes at the [releases page](https://github.com/djizus/force-prime-heroes-combat-simulator/releases).
