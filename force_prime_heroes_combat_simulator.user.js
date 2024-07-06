@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Force Prime Heroes Combat Simulator
-// @version      1.6
+// @version      1.7
 // @description  Fight projections for Force Prime Heroes
 // @license      MIT
 // @namespace    https://github.com/djizus
@@ -130,6 +130,9 @@
                 if (unitInfo && unit.Number > 0) {
                     let unitHp = unitInfo.HP * (1 + heroDef / 10);
                     unit.Number = Math.ceil((unit.Number * unitHp - damageTakenByStack) / unitHp);
+					if (unit.Number < 0) {
+						unit.Number =0;
+					}
                 }
             });
         }
@@ -137,8 +140,8 @@
         let powerLeft = calculateRosterPower(roster, heroPower, unitData);
 
         if (enemyPowerLeft < 0) enemyPowerLeft = 0;
-        let casualtiesPercentage = Math.floor((enemyPowerLeft / powerLeft) ** 2 * 100) / 100;
-
+        let casualtiesFirstStep = Math.floor(100 * enemyPowerLeft / powerLeft)** 2;
+        let casualtiesPercentage = casualtiesFirstStep/(100**2);
         roster.forEach(unit => {
             if (unit.Number > 0) {
                 let casualtiesToApply = Math.floor(unit.Number * casualtiesPercentage);
