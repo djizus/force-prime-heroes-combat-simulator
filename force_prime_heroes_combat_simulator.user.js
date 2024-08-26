@@ -185,8 +185,9 @@
 			let server_url = params['server'];
 			let torii = params['torii'];
 			let contract = params['contract'];
+			console.log(src);
 			// Get game ID
-			const gameResponse = await fetch(`https://forceprime.io/dojo/player_game?player_id=${account}&world_id=${world_id}`, {
+			const gameResponse = await fetch(`https://forceprime.io/v2/dojo/player_game?player_id=${account}&world_id=${world_id}`, {
 				method: "GET",
 				headers: {
 					"priority": "u=1, i",
@@ -195,7 +196,7 @@
 			const gameData = await gameResponse.json();
 			const gameId = gameData["game_id"];
 			// Get hero stats
-			const heroStatsResponse = await fetch(`https://forceprime.io/dojo/player_stats?game_id=${gameId}&world_id=${world_id}`, {
+			const heroStatsResponse = await fetch(`https://forceprime.io/v2/dojo/player_stats?game_id=${gameId}&world_id=${world_id}`, {
 				method: "GET",
 				headers: {
 					"priority": "u=1, i",
@@ -206,7 +207,7 @@
 			heroPower.find(stat => stat.Stat === "Attack").Number = heroStats.stats.attack;
 			heroPower.find(stat => stat.Stat === "Defense").Number = heroStats.stats.defence;
 			// Get roster data
-			const rosterDataResponse = await fetch(`https://forceprime.io/dojo/player_units?game_id=${gameId}&world_id=${world_id}`, {
+			const rosterDataResponse = await fetch(`https://forceprime.io/v2/dojo/player_units?game_id=${gameId}&world_id=${world_id}`, {
 				method: "GET",
 				headers: {
 					"priority": "u=1, i",
