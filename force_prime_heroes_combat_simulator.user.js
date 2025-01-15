@@ -17,7 +17,7 @@
         // Recruitable Units
         {
             unit: "Centaur",
-            id: 1,
+            id: 268,
             type: "Melee",
             attack: 3,
             hp: 12,
@@ -26,7 +26,7 @@
         },
         {
             unit: "Dwarf",
-            id: 2,
+            id: 273,
             type: "Ranged",
             attack: 5,
             hp: 20,
@@ -35,7 +35,7 @@
         },
         {
             unit: "Crusader",
-            id: 3,
+            id: 269,
             type: "Melee",
             attack: 4,
             hp: 36,
@@ -44,7 +44,7 @@
         },
         {
             unit: "Monk",
-            id: 4,
+            id: 270,
             type: "Ranged",
             attack: 12,
             hp: 27,
@@ -53,7 +53,7 @@
         },
         {
             unit: "Angel",
-            id: 5,
+            id: 271,
             type: "Melee",
             attack: 15,
             hp: 60,
@@ -207,6 +207,182 @@
         }
     ];
 
+    async function getCurrentGameData() {
+        try {
+            console.log("Starting getCurrentGameData...");
+            
+            // Find the iframe
+            let iframe = document.getElementById("game_iframe_bg");
+            if (!iframe) {
+                console.error("Iframe not found!");
+                throw new Error("Game iframe not found");
+            }
+            console.log("Found iframe:", iframe);
+
+            // Get and parse iframe src
+            let src = iframe.getAttribute('src');
+            if (!src) {
+                console.error("Iframe src is empty!");
+                throw new Error("Iframe src not found");
+            }
+            console.log("Iframe src:", src);
+
+            // Parse URL parameters
+            const urlParams = new URLSearchParams(src);
+            const account = urlParams.get('account');
+            const world_id = urlParams.get('world_id');
+            console.log("Parsed parameters:", { account, world_id });
+
+            if (!account || !world_id) {
+                console.error("Missing required parameters:", { account, world_id });
+                throw new Error("Required parameters not found");
+            }
+
+            // Get game ID
+            console.log("Fetching game ID...");
+            const gameResponse = await fetch(`https://forceprime.io/v2/dojo/player_game?player_id=${account}&world_id=${world_id}`, {
+                method: "GET",
+                headers: {
+                    "priority": "u=1, i",
+                }
+            });
+            const gameData = await gameResponse.json();
+            console.log("Game data response:", gameData);
+            const gameId = gameData["game_id"];
+            console.log("Game ID:", gameId);
+
+            // Get hero stats
+            console.log("Fetching hero stats...");
+            const heroStatsResponse = await fetch(`https://forceprime.io/v2/dojo/player_stats?game_id=${gameId}&world_id=${world_id}`, {
+                method: "GET",
+                headers: {
+                    "priority": "u=1, i",
+                }
+            });
+            const heroStats = await heroStatsResponse.json();
+            console.log("Hero stats response:", heroStats);
+
+            // Get roster data
+            console.log("Fetching roster data...");
+            const rosterDataResponse = await fetch(`https://forceprime.io/v2/dojo/player_units?game_id=${gameId}&world_id=${world_id}`, {
+                method: "GET",
+                headers: {
+                    "priority": "u=1, i",
+                }
+            });
+            const rosterData = await rosterDataResponse.json();
+            console.log("Roster data response:", rosterData);
+
+            // Update the UI with the retrieved data
+            updateUIWithGameData(heroStats, rosterData);
+        } catch (error) {
+            console.error("Error in getCurrentGameData:", error);
+            console.error("Stack trace:", error.stack);
+        }
+    }
+
+    function calculateCurrentStatus() {
+        console.log("Calculating current status...");
+        
+        // Get hero stats
+        const heroAttack = parseFloat(document.getElementById('heroAttack').value) || 0;
+        const heroDefense = parseFloat(document.getElementById('heroDefense').value) || 0;
+        
+        let totalPower = 0;
+        let rangedAttack = 0;
+
+        // Process each unit
+        ['centaur', 'dwarf', 'crusader', 'monk', 'angel'].forEach(unitName => {
+            const unitCount = parseInt(document.getElementById(`${unitName}Count`).value) || 0;
+            if (unitCount > 0) {
+                const unitData = UNITS_DATA.find(u => u.unit.toLowerCase() === unitName);
+                if (unitData) {
+                    // Calculate boosted stats
+                    const boostedAttack = unitData.attack * unitCount * (1 + (heroAttack * 8 / 100));
+                    const boostedHp = unitData.hp * unitCount * (1 + (heroDefense / 10));
+                    
+                    // Calculate unit stack power
+                    const unitStackPower = Math.floor(Math.sqrt(boostedAttack * boostedHp));
+                    totalPower += unitStackPower;
+
+                    // Add to ranged attack if unit is ranged
+                    if (unitData.type === "Ranged") {
+                        rangedAttack += Math.floor(unitData.attack * unitCount * (1 + (heroAttack * 8 / 100)));
+                    }
+
+                    console.log(`${unitData.unit} stack:`, {
+                        count: unitCount,
+                        baseAttack: unitData.attack,
+                        baseHp: unitData.hp,
+                        boostedAttack: Math.floor(boostedAttack),
+                        boostedHp: Math.floor(boostedHp),
+                        stackPower: unitStackPower
+                    });
+                }
+            }
+        });
+
+        // Update display
+        const currentPowerSpan = document.getElementById('currentPower');
+        const currentAttackSpan = document.getElementById('currentAttack');
+        
+        if (currentPowerSpan) currentPowerSpan.textContent = totalPower;
+        if (currentAttackSpan) currentAttackSpan.textContent = rangedAttack;
+
+        console.log("Final calculations:", {
+            totalPower,
+            rangedAttack
+        });
+    }
+
+    function updateUIWithGameData(heroStats, rosterData) {
+        console.log("Starting UI update with data:", { heroStats, rosterData });
+
+        // Update hero stats
+        const heroAttackInput = document.getElementById('heroAttack');
+        const heroDefenseInput = document.getElementById('heroDefense');
+        
+        if (heroStats.success && heroStats.stats) {
+            console.log("Updating hero stats:", heroStats.stats);
+            heroAttackInput.value = heroStats.stats.attack || 0;
+            heroDefenseInput.value = heroStats.stats.defence || 0;
+        }
+
+        // Update roster counts
+        if (rosterData.success && rosterData.units) {
+            console.log("Updating roster with units:", rosterData.units);
+            
+            // Reset all unit counts
+            ['centaurCount', 'dwarfCount', 'crusaderCount', 'monkCount', 'angelCount'].forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.value = '0';
+                    console.log(`Reset ${inputId} to 0`);
+                }
+            });
+
+            // Update unit counts from response
+            for (let i = 1; i <= 5; i++) {
+                const unitId = rosterData.units[`unit_${i}_id`];
+                const unitCount = rosterData.units[`unit_${i}_count`];
+                console.log(`Processing unit ${i}:`, { unitId, unitCount });
+                
+                if (unitId && unitCount) {
+                    const unitData = UNITS_DATA.find(u => u.id === unitId);
+                    if (unitData) {
+                        const input = document.getElementById(`${unitData.unit.toLowerCase()}Count`);
+                        if (input) {
+                            input.value = unitCount;
+                            console.log(`Updated ${unitData.unit} count to ${unitCount}`);
+                        }
+                    }
+                }
+            }
+            
+            // Calculate current status after updating all values
+            calculateCurrentStatus();
+        }
+    }
 
     const styles = `
     /* Container styles */
@@ -650,6 +826,18 @@
 
         enemySelect.addEventListener('change', updateSelectImage);
         updateSelectImage(); // Initialize with first option
+
+        // Add Get Current Data button handler
+        const getCurrentDataBtn = wrapper.querySelector('#getCurrentData');
+        if (getCurrentDataBtn) {
+            getCurrentDataBtn.addEventListener('click', getCurrentGameData);
+        }
+
+        // Add input event listeners for auto-calculation
+        const inputs = wrapper.querySelectorAll('.simulator-input');
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateCurrentStatus);
+        });
     }
 
     // Improved draggable functionality
