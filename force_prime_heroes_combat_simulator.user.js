@@ -44,7 +44,7 @@
         },
         {
             unit: "Monk",
-            id: 270,
+            id: 280,
             type: "Ranged",
             attack: 12,
             hp: 27,
@@ -53,7 +53,7 @@
         },
         {
             unit: "Angel",
-            id: 271,
+            id: 266,
             type: "Melee",
             attack: 15,
             hp: 60,
@@ -686,6 +686,38 @@
         margin-left: -10px;
         margin-top: -10px;
     }
+
+    .battle-result .casualties {
+        color: #ff0000;
+    }
+
+    .unit-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-right: 8px;
+    }
+
+    .units-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .unit-row {
+        display: flex;
+        gap: 12px;
+    }
+
+    .stats-line {
+        color: #ffffffa6;
+        margin-bottom: 8px;
+    }
+
+    .stats-line .value {
+        color: #ffffff;
+        margin-right: 24px;
+    }
 `;
 
     // Add styles to document
@@ -719,8 +751,7 @@
 
         // Update the enemy select options
         const enemyOptionsHTML = UNITS_DATA.map(unit => 
-            `<option value="${unit.unit}" data-icon="${unit.image}" 
-             data-attack="${unit.attack}" data-hp="${unit.hp}" data-power="${unit.power}">${unit.unit}</option>`
+            `<option value="${unit.id}" data-icon="${unit.image}">${unit.unit}</option>`
         ).join('');
 
         return `
@@ -986,13 +1017,29 @@
         
         // Get enemy data
         const enemySelect = document.getElementById('enemyUnit');
-        const enemyCount = parseInt(document.getElementById('enemyCount').value) || 0;
+        const enemyPowerInput = parseInt(document.getElementById('enemyPower').value) || 0;
         const selectedEnemy = UNITS_DATA.find(u => u.id === parseInt(enemySelect.value));
-        
-        if (!selectedEnemy || enemyCount === 0) {
-            console.warn("No enemy selected or count is 0");
+
+        if (!selectedEnemy || enemyPowerInput === 0) {
+            console.warn("No enemy selected or power is 0");
             return;
         }
+
+        // Calculate enemy count from power
+        // power = sqrt(attack * hp * count * count)
+        // power^2 = attack * hp * count^2
+        // count = sqrt(power^2 / (attack * hp))
+        const enemyCount = Math.floor(Math.sqrt(
+            Math.pow(enemyPowerInput, 2) / (selectedEnemy.attack * selectedEnemy.hp)
+        ));
+
+        console.log("Enemy calculation:", {
+            enemyUnit: selectedEnemy.unit,
+            inputPower: enemyPowerInput,
+            calculatedCount: enemyCount,
+            attack: selectedEnemy.attack,
+            hp: selectedEnemy.hp
+        });
 
         // Get our current roster and stats
         const heroAttack = parseFloat(document.getElementById('heroAttack').value) || 0;
@@ -1087,54 +1134,75 @@
             battleResult = "Victory!";
         }
 
+        // Calculate final values and display results in one go
+        let finalPower = 0;
+        let finalAttack = 0;
+
+        if (roster.some(entry => entry.count > 0)) {
+            // Calculate final power
+            finalPower = roster.reduce((total, entry) => {
+                const boostedAttack = entry.unit.attack * entry.count * (1 + (heroAttack * 8 / 100));
+                const boostedHp = entry.unit.hp * entry.count * (1 + (heroDefense / 10));
+                return total + Math.floor(Math.sqrt(boostedAttack * boostedHp));
+            }, 0);
+
+            // Calculate final ranged attack
+            finalAttack = roster
+                .filter(entry => entry.unit.type === "Ranged")
+                .reduce((total, entry) => {
+                    return total + Math.floor(entry.unit.attack * entry.count * (1 + (heroAttack * 8 / 100)));
+                }, 0);
+        }
+
         // Display results
-        let resultHTML = `
+        const resultHTML = `
             <div class="battle-result">
-                <h4>${battleResult}</h4>
-                <div class="casualties-report">
-                    <p>Surviving units:</p>
-                    ${roster.map(entry => {
-                        const casualties = entry.originalCount - entry.count;
-                        return `
-                            <div class="unit-result">
-                                <span>${entry.unit.unit}: ${entry.count}/${entry.originalCount}</span>
-                                ${casualties > 0 ? `<span class="casualties">(-${casualties})</span>` : ''}
-                            </div>
-                        `;
-                    }).join('')}
-                    <p>Enemy ${selectedEnemy.unit}: ${enemyRemaining}/${enemyCount}
-                       ${enemyCount - enemyRemaining > 0 ? ` (-${enemyCount - enemyRemaining})` : ''}
-                    </p>
+                <div class="stats-line">
+                    Power: <span class="value">${finalPower}</span> Attack: <span class="value">${finalAttack}</span>
+                </div>
+                <div class="units-grid">
+                    <div class="unit-row">
+                        ${['Centaur', 'Dwarf'].map(unitType => {
+                            const entry = roster.find(r => r.unit.unit === unitType);
+                            const casualties = entry ? entry.originalCount - entry.count : 0;
+                            return `
+                                <div class="unit-box">
+                                    <img src="${UNITS_DATA.find(u => u.unit === unitType).image}" class="unit-icon">
+                                    ${entry ? entry.count : '0'}${casualties > 0 ? 
+                                        ` <span style="color: #ff0000;">(-${casualties})</span>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="unit-row">
+                        ${['Crusader', 'Monk'].map(unitType => {
+                            const entry = roster.find(r => r.unit.unit === unitType);
+                            const casualties = entry ? entry.originalCount - entry.count : 0;
+                            return `
+                                <div class="unit-box">
+                                    <img src="${UNITS_DATA.find(u => u.unit === unitType).image}" class="unit-icon">
+                                    ${entry ? entry.count : '0'}${casualties > 0 ? 
+                                        ` <span style="color: #ff0000;">(-${casualties})</span>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="unit-row">
+                        ${['Angel'].map(unitType => {
+                            const entry = roster.find(r => r.unit.unit === unitType);
+                            const casualties = entry ? entry.originalCount - entry.count : 0;
+                            return `
+                                <div class="unit-box">
+                                    <img src="${UNITS_DATA.find(u => u.unit === unitType).image}" class="unit-icon">
+                                    ${entry ? entry.count : '0'}${casualties > 0 ? 
+                                        ` <span style="color: #ff0000;">(-${casualties})</span>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             </div>
         `;
-
-        // Add some CSS for the results
-        const style = document.createElement('style');
-        style.textContent = `
-            .battle-result {
-                margin-top: 1rem;
-                padding: 1rem;
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 8px;
-            }
-            .battle-result h4 {
-                margin: 0 0 0.5rem 0;
-                color: var(--fp-main-color);
-            }
-            .casualties-report {
-                font-size: 0.9em;
-            }
-            .unit-result {
-                margin: 0.25rem 0;
-                display: flex;
-                justify-content: space-between;
-            }
-            .casualties {
-                color: #ff4444;
-            }
-        `;
-        document.head.appendChild(style);
 
         // Update the display
         const resultContainer = document.getElementById('battleResult');
