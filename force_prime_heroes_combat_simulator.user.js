@@ -12,14 +12,201 @@
 
 (function() {
     'use strict';
+    
+    const UNITS_DATA = [
+        // Recruitable Units
+        {
+            unit: "Centaur",
+            id: 1,
+            type: "Melee",
+            attack: 3,
+            hp: 12,
+            power: 6,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F3F1tv6IdfVuTIJQvab01%252Fa_centaur_cr.png%3Falt%3Dmedia%26token%3D46908737-a9da-45dd-b93f-8645df668488&width=300&dpr=4&quality=100&sign=eab3b18f&sv=2'
+        },
+        {
+            unit: "Dwarf",
+            id: 2,
+            type: "Ranged",
+            attack: 5,
+            hp: 20,
+            power: 10,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FyRZ2FsAI5nk6QJ1JMY0z%252Fa_dwarf_cr.png%3Falt%3Dmedia%26token%3D7e488750-359c-4085-84f0-a52cc5298d96&width=300&dpr=1&quality=100&sign=db01bb00&sv=2'
+        },
+        {
+            unit: "Crusader",
+            id: 3,
+            type: "Melee",
+            attack: 4,
+            hp: 36,
+            power: 12,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F0GFxza74x0ZznMQEx10d%252Fa_crusader_cr.png%3Falt%3Dmedia%26token%3D71357946-ff4a-492d-a579-d1278b59094a&width=300&dpr=1&quality=100&sign=47c6256e&sv=2'
+        },
+        {
+            unit: "Monk",
+            id: 4,
+            type: "Ranged",
+            attack: 12,
+            hp: 27,
+            power: 18,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FEnu4nAr8lCtbjrLiXEEL%252Fa_monk_cr.png%3Falt%3Dmedia%26token%3Daef742fe-f80c-4211-85f3-cfcaa2e0d787&width=300&dpr=1&quality=100&sign=43c449a0&sv=2'
+        },
+        {
+            unit: "Angel",
+            id: 5,
+            type: "Melee",
+            attack: 15,
+            hp: 60,
+            power: 30,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FTFKDbtgBU85MzDSk18eF%252Fa_angel_cr.png%3Falt%3Dmedia%26token%3D9bfc77d1-bf5f-45e5-918d-cf4aef20eb24&width=300&dpr=4&quality=100&sign=3edd77a1&sv=2'
+        },
+        // Enemy Units
+        {
+            unit: "Young Ent",
+            id: 6,
+            type: "Melee",
+            attack: 2,
+            hp: 8,
+            power: 4,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FopOmvQQFLTuCu6H2W3QG%252Fe_ent_small.png%3Falt%3Dmedia%26token%3D11f9bdd0-0c88-49e9-9a0d-bfd3ebd3cc3c&width=300&dpr=1&quality=100&sign=ac3e7fc9&sv=2'
+        },
+        {
+            unit: "Skeleton Mage",
+            id: 7,
+            type: "Ranged",
+            attack: 2,
+            hp: 8,
+            power: 4,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F457tJhTWCyKkAGX85FEW%252Fe_skeleton_mage.png%3Falt%3Dmedia%26token%3Df8a12486-fc04-4cc3-9779-cb5743608ac3&width=300&dpr=1&quality=100&sign=830fd0db&sv=2'
+        },
+        {
+            unit: "Fire Elemental",
+            id: 8,
+            type: "Melee",
+            attack: 3,
+            hp: 12,
+            power: 6,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FGyiI5vzj22IRe1WlkDuR%252Fe_fire_elemental.png%3Falt%3Dmedia%26token%3D0238fc21-41be-4c32-b2fa-ff7640161cf8&width=300&dpr=1&quality=100&sign=47bbace9&sv=2'
+        },
+        {
+            unit: "Zombie",
+            id: 9,
+            type: "Melee",
+            attack: 5,
+            hp: 20,
+            power: 10,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FSMgIsCY6xe48jCDMzYeE%252Fe_zombie.png%3Falt%3Dmedia%26token%3D01d6e362-24ee-47cf-810f-cfbddf6027ac&width=300&dpr=1&quality=100&sign=52680acf&sv=2'
+        },
+        {
+            unit: "Ent",
+            id: 10,
+            type: "Melee",
+            attack: 4,
+            hp: 25,
+            power: 10,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FyX6RojTPFMExXFTFvNJ8%252Fe_ent.png%3Falt%3Dmedia%26token%3D9f0acdc0-d4a1-4570-8e42-9504014bc4f8&width=300&dpr=1&quality=100&sign=fc135fd0&sv=2'
+        },
+        {
+            unit: "Genie",
+            id: 11,
+            type: "Ranged",
+            attack: 5,
+            hp: 20,
+            power: 10,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FNRdaKK5EQIVLXbofcj9E%252Fe_genie.png%3Falt%3Dmedia%26token%3D79c99884-461f-47f8-8c4a-d68d6c1d02a1&width=300&dpr=1&quality=100&sign=d7020660&sv=2'
+        },
+        {
+            unit: "Vampire",
+            id: 12,
+            type: "Melee",
+            attack: 6,
+            hp: 24,
+            power: 12,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FgD9jGYCiK4d9IS4uIQgX%252Fe_vampire.png%3Falt%3Dmedia%26token%3Dbe4bdcec-f71c-422b-a16a-ab1266ae4a7c&width=300&dpr=1&quality=100&sign=a2887bb9&sv=2'
+        },
+        {
+            unit: "Cyclops",
+            id: 13,
+            type: "Ranged",
+            attack: 10,
+            hp: 40,
+            power: 20,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FyeUudyHKbuqEmYFuZscd%252Fe_cuclopus.png%3Falt%3Dmedia%26token%3D4b9b4563-d7a0-4d2c-b3c4-9008254f4a7b&width=300&dpr=1&quality=100&sign=cb134d82&sv=2'
+        },
+        {
+            unit: "Minotaur",
+            id: 14,
+            type: "Melee",
+            attack: 12,
+            hp: 48,
+            power: 24,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FfMawMxGhpntWqJDKRlkS%252Fe_minotaur.png%3Falt%3Dmedia%26token%3D4f9d7af7-fe13-4bb0-8b14-d4cfe58cd254&width=300&dpr=1&quality=100&sign=dc96d758&sv=2'
+        },
+        {
+            unit: "Necromancer",
+            id: 15,
+            type: "Melee",
+            attack: 16,
+            hp: 36,
+            power: 24,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F2rzRduu3bwZ62S7MnDKG%252Fe_necromancer.png%3Falt%3Dmedia%26token%3D3491d397-0ad3-44b3-8d6d-8b2821e7b449&width=300&dpr=1&quality=100&sign=d83a0fe1&sv=2'
+        },
+        {
+            unit: "Fire Witch",
+            id: 16,
+            type: "Ranged",
+            attack: 16,
+            hp: 36,
+            power: 24,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FmneqlhCFnOwKVfjvY4yv%252Fe_fire_witch.png%3Falt%3Dmedia%26token%3D71ac96b4-d349-469a-84d5-a63d0502ac76&width=300&dpr=1&quality=100&sign=a401496f&sv=2'
+        },
+        {
+            unit: "Fairy Dragon",
+            id: 17,
+            type: "Melee",
+            attack: 20,
+            hp: 80,
+            power: 40,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F2uiHRKi7msZYIcGON7e5%252Fe_fairy_dragon.png%3Falt%3Dmedia%26token%3Da5d4aede-0092-4839-8b49-e8f89a8612dd&width=300&dpr=1&quality=100&sign=bc79a059&sv=2'
+        },
+        {
+            unit: "Titan",
+            id: 18,
+            type: "Ranged",
+            attack: 20,
+            hp: 80,
+            power: 40,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FU8KgdndrItXg8fHc2Z72%252Fe_titan.png%3Falt%3Dmedia%26token%3Dd04c7419-2e43-4b71-8dd3-56b3e9a38fd1&width=300&dpr=1&quality=100&sign=e0bfaa59&sv=2'
+        },
+        {
+            unit: "Death",
+            id: 19,
+            type: "Melee",
+            attack: 25,
+            hp: 100,
+            power: 50,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F6DCUTNgLEOcMJ5eIvODw%252Fe_death.png%3Falt%3Dmedia%26token%3D36b5cad5-4d09-4cd6-a85a-249d9c0bca38&width=300&dpr=1&quality=100&sign=bae67d24&sv=2'
+        },
+        {
+            unit: "Devil",
+            id: 20,
+            type: "Melee",
+            attack: 50,
+            hp: 200,
+            power: 100,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FNCe5Xx767UvpEfYPN3qG%252Fe_devil.png%3Falt%3Dmedia%26token%3D1c920ded-3968-4d37-9a7f-3676ff282d74&width=300&dpr=1&quality=100&sign=9250a5e1&sv=2'
+        },
+        {
+            unit: "Bone Dragon",
+            id: 21,
+            type: "Melee",
+            attack: 250,
+            hp: 1000,
+            power: 500,
+            image: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252Fr3NwXYBYIfbWfCddJ2lB%252Fe_bone_dragon.png%3Falt%3Dmedia%26token%3D710e4f16-fefa-466c-b821-9720f9408b40&width=300&dpr=1&quality=100&sign=5c502264&sv=2'
+        }
+    ];
 
-    const UNIT_IMAGES = {
-        Centaur: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F3F1tv6IdfVuTIJQvab01%252Fa_centaur_cr.png%3Falt%3Dmedia%26token%3D46908737-a9da-45dd-b93f-8645df668488&width=300&dpr=4&quality=100&sign=eab3b18f&sv=2',
-        Dwarf: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FyRZ2FsAI5nk6QJ1JMY0z%252Fa_dwarf_cr.png%3Falt%3Dmedia%26token%3D7e488750-359c-4085-84f0-a52cc5298d96&width=300&dpr=1&quality=100&sign=db01bb00&sv=2',
-        Crusader: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252F0GFxza74x0ZznMQEx10d%252Fa_crusader_cr.png%3Falt%3Dmedia%26token%3D71357946-ff4a-492d-a579-d1278b59094a&width=300&dpr=1&quality=100&sign=47c6256e&sv=2',
-        Monk: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FEnu4nAr8lCtbjrLiXEEL%252Fa_monk_cr.png%3Falt%3Dmedia%26token%3Daef742fe-f80c-4211-85f3-cfcaa2e0d787&width=300&dpr=1&quality=100&sign=43c449a0&sv=2',
-        Angel: 'https://fp-heroes.gitbook.io/~gitbook/image?url=https%3A%2F%2F934968641-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FddK5n8mDIAsaa4AGx8yd%252Fuploads%252FTFKDbtgBU85MzDSk18eF%252Fa_angel_cr.png%3Falt%3Dmedia%26token%3D9bfc77d1-bf5f-45e5-918d-cf4aef20eb24&width=300&dpr=4&quality=100&sign=3edd77a1&sv=2'
-    };
 
     const styles = `
     /* Container styles */
@@ -116,14 +303,13 @@
 
     /* Section styles */
     .simulator-section {
-        margin-bottom: 12px;
+        margin-bottom: 16px;
     }
 
     .simulator-section-title {
-        margin: 0 0 8px 0;
-        font-size: 1em;
-        font-weight: bold;
-        color: #ffd700;
+        font-size: 16px;
+        color: var(--fp-main-color);
+        margin-bottom: 8px;
     }
 
     /* Current Status styles */
@@ -293,28 +479,6 @@
         min-width: 60px;
         height: 32px;
     }
-
-    .fight-results {
-        padding: 8px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 4px;
-        margin-top: 8px;
-    }
-    
-    .fight-results div {
-        margin: 4px 0;
-    }
-
-    .simulator-results .unit-column {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 4px;
-        padding: 8px;
-    }
-    
-    .simulator-results .unit-column span {
-        font-size: 1.2em;
-        font-weight: bold;
-    }
 `;
 
     // Add styles to document
@@ -324,6 +488,34 @@
 
     // Create improved simulator HTML
     function createSimulatorHTML() {
+        // Get only recruitable units (first 5 units)
+        const recruitableUnits = UNITS_DATA.slice(0, 5);
+
+        // Update the roster section HTML generation
+        const rosterHTML = `
+            <div class="unit-grid">
+                ${recruitableUnits.slice(0, 3).map(unit => `
+                    <div class="unit-column">
+                        <img src="${unit.image}" alt="${unit.unit}" class="unit-icon">
+                        <input type="number" class="simulator-input" id="${unit.unit.toLowerCase()}Count" value="0" min="0">
+                    </div>
+                `).join('')}
+            </div>
+            <div class="unit-grid second-row">
+                ${recruitableUnits.slice(3, 5).map(unit => `
+                    <div class="unit-column">
+                        <img src="${unit.image}" alt="${unit.unit}" class="unit-icon">
+                        <input type="number" class="simulator-input" id="${unit.unit.toLowerCase()}Count" value="0" min="0">
+                    </div>
+                `).join('')}
+            </div>`;
+
+        // Update the enemy select options
+        const enemyOptionsHTML = UNITS_DATA.map(unit => 
+            `<option value="${unit.unit}" data-icon="${unit.image}" 
+             data-attack="${unit.attack}" data-hp="${unit.hp}" data-power="${unit.power}">${unit.unit}</option>`
+        ).join('');
+
         return `
             <header class="simulator-header">
                 <h3>Combat Simulator</h3>
@@ -357,30 +549,7 @@
 
                 <section class="simulator-section">
                     <h4 class="simulator-section-title">Roster</h4>
-                    <div class="unit-grid">
-                        <div class="unit-column">
-                            <img src="${UNIT_IMAGES.Centaur}" alt="Centaur" class="unit-icon">
-                            <input type="number" class="simulator-input" id="centaurCount" value="0" min="0">
-                        </div>
-                        <div class="unit-column">
-                            <img src="${UNIT_IMAGES.Dwarf}" alt="Dwarf" class="unit-icon">
-                            <input type="number" class="simulator-input" id="dwarfCount" value="0" min="0">
-                        </div>
-                        <div class="unit-column">
-                            <img src="${UNIT_IMAGES.Crusader}" alt="Crusader" class="unit-icon">
-                            <input type="number" class="simulator-input" id="crusaderCount" value="0" min="0">
-                        </div>
-                    </div>
-                    <div class="unit-grid second-row">
-                        <div class="unit-column">
-                            <img src="${UNIT_IMAGES.Monk}" alt="Monk" class="unit-icon">
-                            <input type="number" class="simulator-input" id="monkCount" value="0" min="0">
-                        </div>
-                        <div class="unit-column">
-                            <img src="${UNIT_IMAGES.Angel}" alt="Angel" class="unit-icon">
-                            <input type="number" class="simulator-input" id="angelCount" value="0" min="0">
-                        </div>
-                    </div>
+                    ${rosterHTML}
                 </section>
 
                 <section class="simulator-section">
@@ -388,11 +557,7 @@
                     <div class="enemy-section">
                         <div class="enemy-inputs">
                             <select class="simulator-input unit-select" id="enemyUnit">
-                                <option value="Centaur" data-icon="${UNIT_IMAGES.Centaur}">Centaur</option>
-                                <option value="Dwarf" data-icon="${UNIT_IMAGES.Dwarf}">Dwarf</option>
-                                <option value="Crusader" data-icon="${UNIT_IMAGES.Crusader}">Crusader</option>
-                                <option value="Monk" data-icon="${UNIT_IMAGES.Monk}">Monk</option>
-                                <option value="Angel" data-icon="${UNIT_IMAGES.Angel}">Angel</option>
+                                ${enemyOptionsHTML}
                             </select>
                             <input type="number" class="simulator-input" id="enemyPower" placeholder="Power" min="0">
                         </div>
@@ -403,57 +568,6 @@
                 <section class="simulator-results" id="results" aria-live="polite"></section>
             </main>
         `;
-    }
-
-    // Handle current data updates
-    function updateCurrentData() {
-        // Set current status
-        document.getElementById('currentPower').textContent = '1';
-        document.getElementById('currentAttack').textContent = '1';
-        
-        // Set hero power
-        document.getElementById('heroAttack').value = '1';
-        document.getElementById('heroDefense').value = '1';
-        
-        // Set roster units
-        const rosterUnits = ['centaur', 'dwarf', 'crusader', 'monk', 'angel'];
-        rosterUnits.forEach(unit => {
-            document.getElementById(`${unit}Count`).value = '1';
-        });
-    }
-
-    function displayFightCalculation() {
-        const resultsSection = document.getElementById('results');
-        const rosterUnits = ['centaur', 'dwarf', 'crusader', 'monk', 'angel'];
-        
-        let rosterText = `
-            <h4 class="simulator-section-title">Fight Results</h4>
-            <div class="unit-grid">
-                <div class="unit-column">
-                    <img src="${UNIT_IMAGES.Centaur}" alt="Centaur" class="unit-icon">
-                    <span>${document.getElementById('centaurCount').value}</span>
-                </div>
-                <div class="unit-column">
-                    <img src="${UNIT_IMAGES.Dwarf}" alt="Dwarf" class="unit-icon">
-                    <span>${document.getElementById('dwarfCount').value}</span>
-                </div>
-                <div class="unit-column">
-                    <img src="${UNIT_IMAGES.Crusader}" alt="Crusader" class="unit-icon">
-                    <span>${document.getElementById('crusaderCount').value}</span>
-                </div>
-            </div>
-            <div class="unit-grid second-row">
-                <div class="unit-column">
-                    <img src="${UNIT_IMAGES.Monk}" alt="Monk" class="unit-icon">
-                    <span>${document.getElementById('monkCount').value}</span>
-                </div>
-                <div class="unit-column">
-                    <img src="${UNIT_IMAGES.Angel}" alt="Angel" class="unit-icon">
-                    <span>${document.getElementById('angelCount').value}</span>
-                </div>
-            </div>`;
-        
-        resultsSection.innerHTML = rosterText;
     }
 
     // Create and add the simulator to the page
@@ -536,14 +650,6 @@
 
         enemySelect.addEventListener('change', updateSelectImage);
         updateSelectImage(); // Initialize with first option
-
-        // Handle Get Current Data button
-        const getCurrentDataBtn = wrapper.querySelector('#getCurrentData');
-        getCurrentDataBtn.addEventListener('click', updateCurrentData);
-
-        // Handle Calculate Fight button
-        const calculateFightBtn = wrapper.querySelector('#calculateFight');
-        calculateFightBtn.addEventListener('click', displayFightCalculation);
     }
 
     // Improved draggable functionality
