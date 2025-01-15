@@ -655,6 +655,37 @@
         min-width: 60px;
         height: 32px;
     }
+
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--fp-main-color);
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+        transform-origin: center center;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .simulator-button.loading {
+        position: relative;
+        color: transparent;
+    }
+
+    .simulator-button.loading .spinner {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+    }
 `;
 
     // Add styles to document
@@ -830,7 +861,9 @@
         // Add Get Current Data button handler
         const getCurrentDataBtn = wrapper.querySelector('#getCurrentData');
         if (getCurrentDataBtn) {
-            getCurrentDataBtn.addEventListener('click', getCurrentGameData);
+            getCurrentDataBtn.addEventListener('click', () => {
+                withLoading(getCurrentDataBtn, getCurrentGameData);
+            });
         }
 
         // Add input event listeners for auto-calculation
@@ -838,6 +871,14 @@
         inputs.forEach(input => {
             input.addEventListener('input', calculateCurrentStatus);
         });
+
+        // Add calculate fight button handler
+        const calculateButton = wrapper.querySelector('#calculateFight');
+        if (calculateButton) {
+            calculateButton.addEventListener('click', () => {
+                withLoading(calculateButton, calculateFight);
+            });
+        }
     }
 
     // Improved draggable functionality
@@ -937,6 +978,194 @@
                 x: currentX,
                 y: currentY
             }));
+        }
+    }
+
+    async function calculateFight() {
+        console.log("Calculating fight...");
+        
+        // Get enemy data
+        const enemySelect = document.getElementById('enemyUnit');
+        const enemyCount = parseInt(document.getElementById('enemyCount').value) || 0;
+        const selectedEnemy = UNITS_DATA.find(u => u.id === parseInt(enemySelect.value));
+        
+        if (!selectedEnemy || enemyCount === 0) {
+            console.warn("No enemy selected or count is 0");
+            return;
+        }
+
+        // Get our current roster and stats
+        const heroAttack = parseFloat(document.getElementById('heroAttack').value) || 0;
+        const heroDefense = parseFloat(document.getElementById('heroDefense').value) || 0;
+        
+        // Create copy of our roster for calculation
+        let roster = ['centaur', 'dwarf', 'crusader', 'monk', 'angel'].map(unitName => {
+            const count = parseInt(document.getElementById(`${unitName}Count`).value) || 0;
+            const unitData = UNITS_DATA.find(u => u.unit.toLowerCase() === unitName);
+            return {
+                unit: unitData,
+                count: count,
+                originalCount: count
+            };
+        }).filter(unit => unit.count > 0);
+
+        console.log("Initial roster:", roster);
+
+        // Phase 1: Ranged Combat
+        // Calculate enemy ranged damage
+        let enemyRangedDamage = 0;
+        if (selectedEnemy.type === "Ranged") {
+            enemyRangedDamage = selectedEnemy.attack * enemyCount;
+        }
+
+        // Calculate our ranged damage
+        let ourRangedDamage = roster
+            .filter(entry => entry.unit.type === "Ranged")
+            .reduce((total, entry) => {
+                return total + Math.floor(entry.unit.attack * entry.count * (1 + (heroAttack * 8 / 100)));
+            }, 0);
+
+        console.log("Ranged phase:", {
+            ourRangedDamage,
+            enemyRangedDamage
+        });
+
+        // Apply enemy ranged damage to our units
+        if (enemyRangedDamage > 0) {
+            const damagePerStack = Math.floor(enemyRangedDamage / roster.length);
+            roster.forEach(entry => {
+                const unitHp = Math.floor(entry.unit.hp * (1 + (heroDefense / 10)));
+                const casualties = Math.floor(damagePerStack / unitHp);
+                entry.count = Math.max(0, entry.count - casualties);
+            });
+        }
+
+        // Apply our ranged damage to enemy
+        const enemyHp = selectedEnemy.hp;
+        const enemyCasualties = Math.floor(ourRangedDamage / enemyHp);
+        let enemyRemaining = Math.max(0, enemyCount - enemyCasualties);
+
+        console.log("After ranged phase:", {
+            roster,
+            enemyRemaining
+        });
+
+        // Phase 2: Power Comparison
+        // Calculate remaining powers
+        let ourPower = roster.reduce((total, entry) => {
+            const boostedAttack = entry.unit.attack * entry.count * (1 + (heroAttack * 8 / 100));
+            const boostedHp = entry.unit.hp * entry.count * (1 + (heroDefense / 10));
+            return total + Math.floor(Math.sqrt(boostedAttack * boostedHp));
+        }, 0);
+
+        let enemyPower = Math.floor(Math.sqrt(
+            selectedEnemy.attack * enemyRemaining * selectedEnemy.hp * enemyRemaining
+        ));
+
+        console.log("Power comparison:", {
+            ourPower,
+            enemyPower
+        });
+
+        // Calculate battle result
+        let battleResult = "";
+        if (ourPower > enemyPower && enemyRemaining > 0) {
+            // Victory with casualties
+            const casualtyRate = Math.pow(enemyPower / ourPower, 2);
+            roster.forEach(entry => {
+                const casualties = Math.floor(entry.count * casualtyRate);
+                entry.count = Math.max(0, entry.count - casualties);
+            });
+            battleResult = "Victory!";
+            enemyRemaining = 0;
+        } else if (ourPower <= enemyPower && enemyRemaining > 0) {
+            // Defeat
+            roster.forEach(entry => entry.count = 0);
+            battleResult = "Defeat!";
+        } else {
+            // Enemy already defeated in ranged phase
+            battleResult = "Victory!";
+        }
+
+        // Display results
+        let resultHTML = `
+            <div class="battle-result">
+                <h4>${battleResult}</h4>
+                <div class="casualties-report">
+                    <p>Surviving units:</p>
+                    ${roster.map(entry => {
+                        const casualties = entry.originalCount - entry.count;
+                        return `
+                            <div class="unit-result">
+                                <span>${entry.unit.unit}: ${entry.count}/${entry.originalCount}</span>
+                                ${casualties > 0 ? `<span class="casualties">(-${casualties})</span>` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                    <p>Enemy ${selectedEnemy.unit}: ${enemyRemaining}/${enemyCount}
+                       ${enemyCount - enemyRemaining > 0 ? ` (-${enemyCount - enemyRemaining})` : ''}
+                    </p>
+                </div>
+            </div>
+        `;
+
+        // Add some CSS for the results
+        const style = document.createElement('style');
+        style.textContent = `
+            .battle-result {
+                margin-top: 1rem;
+                padding: 1rem;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 8px;
+            }
+            .battle-result h4 {
+                margin: 0 0 0.5rem 0;
+                color: var(--fp-main-color);
+            }
+            .casualties-report {
+                font-size: 0.9em;
+            }
+            .unit-result {
+                margin: 0.25rem 0;
+                display: flex;
+                justify-content: space-between;
+            }
+            .casualties {
+                color: #ff4444;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Update the display
+        const resultContainer = document.getElementById('battleResult');
+        if (!resultContainer) {
+            const container = document.createElement('div');
+            container.id = 'battleResult';
+            document.querySelector('.combat-simulator-wrapper').appendChild(container);
+        }
+        document.getElementById('battleResult').innerHTML = resultHTML;
+    }
+
+    async function withLoading(button, asyncFunction) {
+        // Create spinner element
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
+        
+        // Store original button text
+        const originalText = button.textContent;
+        
+        try {
+            // Add loading state
+            button.classList.add('loading');
+            button.appendChild(spinner);
+            
+            // Execute the async function
+            await asyncFunction();
+        } finally {
+            // Remove loading state
+            button.classList.remove('loading');
+            spinner.remove();
+            button.textContent = originalText;
         }
     }
 
